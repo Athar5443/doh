@@ -1,0 +1,25 @@
+# Nama alur kerja yang akan muncul di tab Actions GitHub
+name: Deploy Cloudflare Worker
+
+# Pemicu alur kerja
+on:
+  push:
+    branches:
+      - main  # Ganti 'main' jika nama branch utama Anda adalah 'master' atau lainnya
+
+# Daftar pekerjaan yang akan dijalankan
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker to Cloudflare
+    steps:
+      # Langkah 1: Mengambil kode dari repositori
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Langkah 2: Menjalankan aksi deploy dari Cloudflare
+      - name: Publish Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          # Token API yang disimpan di secrets repositori GitHub
+          apiToken: ${{ secrets.CF_API_TOKEN }}

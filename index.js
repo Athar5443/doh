@@ -7,7 +7,6 @@
 const DOH_UPSTREAM = 'https://security.cloudflare-dns.com/dns-query';
 
 /**
- * URL ke file .txt mentah yang berisi daftar domain untuk diblokir.
  * @type {string}
  */
 const BLOCKLIST_URL = 'https://raw.githubusercontent.com/Athar5443/Youtube_BlockAds_List/refs/heads/main/blocklist.txt'; // <-- GANTI DENGAN URL LIST ANDA

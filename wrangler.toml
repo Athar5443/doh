@@ -1,9 +1,11 @@
+# Nama worker Anda.
 name = "doh"
-workers_dev = true
-# route = "example.com/dns-query"
-compatibility_date = "2024-01-26"
 
 main = "index.js"
 
+account_id = "28d3b4a501d4b0aa586f2aa81b28a70c"
+compatibility_date = "2024-01-26"
+
+workers_dev = true
 [placement]
 mode = "smart"

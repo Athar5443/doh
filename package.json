@@ -2,13 +2,12 @@
   "private": true,
   "name": "doh",
   "version": "1.0.0",
-  "description": "Basic DNS-over-HTTPS proxy on Cloudflare Workers",
+  "description": "Smart DNS-over-HTTPS resolver on Cloudflare Workers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write '**/*.{js,css,json,md}'"
+    "deploy": "wrangler deploy"
   },
-  "author": "tina-hello",
+  "author": "Athar5443",
   "license": "0BSD",
   "dependencies": {
     "wrangler": "^3.24.0"

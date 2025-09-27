@@ -11,8 +11,9 @@ const DOH_UPSTREAM = 'https://security.cloudflare-dns.com/dns-query';
 
 /**
  * URL ke file .txt mentah yang berisi daftar domain untuk diblokir.
+ * Menggunakan daftar StevenBlack yang populer dan seimbang.
  */
-const BLOCKLIST_URL = 'https://raw.githubusercontent.com/Athar5443/Youtube_BlockAds_List/refs/heads/main/blocklist.txt';
+const BLOCKLIST_URL = 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts';
 
 /**
  * Domain utama tempat worker ini berjalan (yang diatur di Workers Routes).
@@ -71,11 +72,11 @@ async function handleDohRequest(request) {
   } catch (e) { console.error("Gagal mem-parsing permintaan:", e); }
 
   if (domain && isBlocked(domain)) {
-    console.log(`Domain terblokir: ${domain}`);
+    console.log(`Domain terblokir (Pencocokan Persis): ${domain}`);
     if (isDohJsonRequest) return new Response('{}', { status: 403, headers: { 'Content-Type': 'application/json' } });
     if (requestBuffer) return createBlockedResponseCname(requestBuffer, SELF_DOMAIN);
   }
-  
+
   const dohUrl = new URL(DOH_UPSTREAM);
   dohUrl.search = searchParams.toString();
   return fetch(dohUrl.toString(), {
@@ -125,20 +126,26 @@ async function updateBlocklistCache() {
   try {
     const res = await fetch(BLOCKLIST_URL); if (!res.ok) throw new Error(`Status: ${res.status}`);
     const text = await res.text();
-    blocklistCache = new Set(text.split('\n').map(l=>l.trim()).filter(l=>l.length>0&&!l.startsWith('#')).map(l=>l.split(/\s+/).pop()));
-    lastCacheUpdateTime = now; console.log(`Cache diperbarui: ${blocklistCache.size} domain.`);
+    const domains = text.split('\n')
+                        .map(l => l.trim())
+                        .filter(l => l.length > 0 && !l.startsWith('#'))
+                        .map(l => l.split(/\s+/).pop()); // Menangani format hosts file
+    blocklistCache = new Set(domains);
+    lastCacheUpdateTime = now;
+    console.log(`Cache diperbarui: ${blocklistCache.size} domain dari StevenBlack/hosts.`);
   } catch (err) { console.error('Gagal memperbarui cache:', err); }
 }
+
+/**
+ * [DIPERBAIKI] Memeriksa apakah domain ada di daftar blokir (Pencocokan Persis).
+ * Ini mencegah pemblokiran yang tidak disengaja terhadap subdomain atau domain induk.
+ * @param {string} domain - Domain yang akan diperiksa.
+ * @returns {boolean} - True HANYA jika domain sama persis dengan yang ada di daftar.
+ */
 function isBlocked(domain) {
-  let d = domain.toLowerCase();
-  while (d) {
-    if (blocklistCache.has(d)) return true;
-    const i = d.indexOf('.');
-    if (i === -1) break;
-    d = d.substring(i + 1);
-  }
-  return false;
+  return blocklistCache.has(domain.toLowerCase());
 }
+
 function getDomainFromDnsMessage(buf) {
   const view = new DataView(buf); if (view.byteLength < 13) return null;
   let len = view.getUint8(12), offset = 13, parts = [];
@@ -148,6 +155,7 @@ function getDomainFromDnsMessage(buf) {
   }
   return parts.join('.');
 }
+
 function createBlockedResponseCname(reqBuf, target) {
   const reqView=new DataView(reqBuf);
   let qEnd=12; while(qEnd<reqBuf.byteLength&&reqView.getUint8(qEnd)!==0){qEnd+=reqView.getUint8(qEnd)+1;} qEnd++;
